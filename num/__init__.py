@@ -60,6 +60,13 @@ def separate(integer: int, /, *, base: int = 10) -> t.List[int]:
         [0xd, 0xe, 0xa, 0xd]
     """
 
+    # TODO: Implement `weight` kwarg, such that sum(separate(integer, weight=True)) == join(separate(integer))
+    # E.g:
+    #   >>> separate(1234)
+    #   [1, 2, 3, 4]
+    #   >>> separate(1234, weight=True)
+    #   [1000, 200, 30, 4]
+
     digits: t.List[int] = []
 
     index: int
