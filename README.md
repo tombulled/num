@@ -1,5 +1,5 @@
 # num
-Number wizardry
+Integer utility library
 
 ## Usage
 
@@ -19,7 +19,7 @@ Number wizardry
 8
 >>> num.length(-1234, sign=True)
 -4
-num.length(0, minify=True)
+>>> num.length(0, minify=True)
 0
 ```
 

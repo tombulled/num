@@ -1,8 +1,31 @@
 import num
 
-assert num.signify(-1234) == -1
-assert num.signify(1234) == 1
+assert num.positive(123) == 123
+assert num.positive(-123) == 123
 
+assert num.negative(-123) == -123
+assert num.negative(123) == -123
+
+assert num.toggle(123) == -123
+assert num.toggle(-123) == 123
+
+assert num.sign(-1234) == -1
+assert num.sign(1234) == 1
+
+assert num.signify(1234, num.Sign.POSITIVE) == 1234
+assert num.signify(1234, num.Sign.NEGATIVE) == -1234
+assert num.signify(-1234, num.Sign.POSITIVE) == 1234
+assert num.signify(-1234, num.Sign.NEGATIVE) == -1234
+
+assert num.join(123, 456) == 123456
+assert num.join(0, 123) == 123
+assert num.join(123, 0) == 1230
+assert num.join(0, 0) == 0
+assert num.join(-123, -456) == -123456
+assert num.join(0, -123) == -123
+assert num.join(-123, 0) == -1230
+
+'''
 assert num.length(0) == 1
 assert num.length(0, minify=True) == 0
 assert num.length(-1234) == 4
@@ -42,5 +65,6 @@ assert i[::-1] == 4321
 assert i[:2] == 12
 assert len(i) == 4
 assert list(i) == [1, 2, 3, 4]
+'''
 
 print('All tests passed.')

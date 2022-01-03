@@ -7,8 +7,10 @@ import enum
 class Sign(int, enum.Enum):
     POSITIVE: int = 1
     NEGATIVE: int = -1
+    NONE: int = 0
 
 
+# NOTE: This should inherit from `int` (instead of using .value)
 class Integer:
     def __init__(self, value: int, /, *, base: int = 10):
         self.value = value
@@ -38,29 +40,32 @@ class Integer:
         return iter(separate(self.value, base=self.base))
 
 
-def signify(integer: int, /) -> Sign:
+def sign(integer: int, /) -> Sign:
     """
-    Signify `integer`
+    Get the sign of `integer`
 
     E.g:
-        >>> signify(-1234)
+        >>> sign(-1234)
         <Sign.NEGATIVE: -1>
-        >>> signify(1234)
+        >>> sign(1234)
         <Sign.POSITIVE: 1>
-        >>> signify(0)
-        <Sign.POSITIVE: 1>
+        >>> sign(0)
+        <Sign.NONE: 0>
     """
 
     if integer < 0:
         return Sign.NEGATIVE
+    elif integer > 0:
+        return Sign.POSITIVE
 
-    # The special case of 0 is given a +ve sign as both +ve and -ve are technically correct
-    return Sign.POSITIVE
+    return Sign.NONE
 
 
-def length(
-    integer: int, /, *, base: int = 10, sign: bool = False, minify: bool = False
-) -> int:
+def signify(integer: int, sign: Sign, /) -> int:
+    return sign * abs(integer)
+
+
+def length(integer: int, /, *, base: int = 10) -> int:
     """
     Count the number of digits in `integer`
 
@@ -69,33 +74,19 @@ def length(
         4
         >>> length(0xdeadbeef, base=16)
         8
-        >>> length(-1234, sign=True)
+        >>> length(-1234)
         -4
-        >>> length(0, minify=True)
-        0
+        >>> length(0)
+        1
     """
 
-    # The integer 0 can be configured to be considered of
-    # zero-length using `minify`
     if integer == 0:
-        if minify:
-            return 0
-        else:
-            return 1
+        return 1
 
-    length: int = math.floor(math.log(abs(integer), base) + 1)
-
-    # Negative numbers can be configured to return a negative
-    # length using `sign`
-    if sign:
-        length *= signify(integer)
-
-    return length
+    return math.floor(math.log(abs(integer), base) + 1) * sign(integer)
 
 
-def separate(
-    integer: int, /, *, base: int = 10, weight: bool = False, sign: bool = False
-) -> t.List[int]:
+def separate(integer: int, /, *, base: int = 10) -> t.List[int]:
     """
     Separate the digits of `integer`
 
@@ -104,65 +95,140 @@ def separate(
         [1, 2, 3, 4]
         >>> separate(0xdead, base=16)
         [0xd, 0xe, 0xa, 0xd]
-        >>> separate(1234, weight=True)
-        [1000, 200, 30, 4]
-        >>> separate(-1234, sign=True)
+        >>> separate(-1234)
         [-1, -2, -3, -4]
     """
 
-    digits: t.List[int] = []
-    signifier: int = Sign.POSITIVE
-
-    if sign:
-        signifier = signify(integer)
-
-    integer = abs(integer)
-
-    index: int
-    for index in range(length(integer, base=base) - 1, -1, -1):
-        multiplier: int = base ** index
-        digit: int = integer // multiplier
-
-        integer -= digit * multiplier
-
-        value: int = digit * signifier
-
-        if weight:
-            value *= multiplier
-
-        digits.append(value)
-
-    return digits
+    return [
+        ((abs(integer) // (base ** index)) % base) * sign(integer)
+        for index in range(length(abs(integer), base=base) - 1, -1, -1)
+    ]
 
 
-def join(integers: t.List[int], /, *, base: int = 10, sign: bool = False) -> int:
+def join(a: int, b: int, /, *, base: int = 10) -> int:
     """
-    Join a list of integers into a single integer
+    Join two integers
+
+    E.g:
+        >>> join(12, 34)
+        1234
+        >>> join(-12, -34)
+        -1234
+    """
+
+    if {sign(a), sign(b)} == {Sign.POSITIVE, Sign.NEGATIVE}:
+        raise ValueError("a and b are of incompatible signs (+ve and -ve)")
+
+    multiplier: Sign = (
+        Sign.NEGATIVE if is_negative(a) or is_negative(b) else Sign.POSITIVE
+    )
+
+    return (abs(a) * base ** length(abs(b), base=base) + abs(b)) * multiplier
+
+
+def join_all(integers: t.Iterable[int], /, *, base: int = 10) -> int:
+    """
+    Join an iterable of integers into a single integer
 
     E.g:
         >>> join([1, 2, 3, 4])
         1234
         >>> join([0xd, 0xe, 0xa, 0xd], base=16)
         0xdead
-         >>> join([-1, -2, -3, -4], sign=True)
+        >>> join([-1, -2, -3, -4])
         -1234
     """
 
-    signifier: int = Sign.POSITIVE
+    integers: t.Tuple[int] = tuple(integers)
 
-    if sign:
-        # Sign must be maintained, therefore if any of the integers
-        # are negative, this sign must be used
-        for integer in integers:
-            signifier = signify(integer)
+    if len(integers) == 0:
+        raise ValueError("no integers to join")
+    if len(integers) == 1:
+        return integers[0]
 
-            if signifier == Sign.NEGATIVE:
-                break
+    return functools.reduce(functools.partial(join, base=base), integers)
 
-    return (
-        functools.reduce(
-            lambda a, b: abs(a) * base ** length(b, base=base) + abs(b),
-            integers,
-        )
-        * signifier
-    )
+
+def weight(integers: t.Iterable[int], /, *, base: int = 10) -> t.List[int]:
+    """
+    Weight integers
+
+    E.g:
+        >>> weight([1, 2, 3, 4])
+        [1000, 200, 30, 4]
+    """
+
+    return [
+        integer * base ** (len(integers) - index - 1)
+        for index, integer in enumerate(integers)
+    ]
+
+
+def positive(n: int, /) -> int:
+    return abs(n)
+
+
+def negative(n: int, /) -> int:
+    return -abs(n)
+
+
+def toggle(n: int, /) -> int:
+    return -n
+
+
+def is_positive(n: int, /) -> bool:
+    return n > 0
+
+
+def is_negative(n: int, /) -> bool:
+    return n < 0
+
+
+def string(integer: int, /, *, base: int = 10) -> str:
+    """
+    Stringify an integer
+
+    E.g:
+        >>> string(0xff, base=16)
+        'ff'
+    """
+
+    raise NotImplementedError
+
+
+def get(integer: int, index: int, /, *, base: int = 10) -> int:
+    """
+    Retrieve the integer at a specific index in `integer`
+
+    E.g:
+        >>> get(1234, 0)
+        1
+        >>> get(1234, -1)
+        4
+    """
+
+    true_index = -index - 1
+
+    if index >= 0:
+        true_index += length(abs(integer), base=base)
+
+    if not 0 <= true_index < length(abs(integer), base=base):
+        raise IndexError("index out of range")
+
+    return ((abs(integer) // (base ** true_index)) % base) * sign(integer)
+
+
+def convert(integer: int, base: int, /) -> int:
+    """
+    Convert `integer` from base-10 to `base`
+
+    E.g:
+        >>> convert(1011, 2) == 0b1011
+        True
+        >>> convert(257, 8) == 0o257
+        True
+        >>> convert(1234, 16) == 0x1234
+        True
+    """
+
+    raise NotImplementedError

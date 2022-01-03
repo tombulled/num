@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "num"
 version = "0.1.0"
-description = "Number wizardry"
+description = "Integer utility library"
 authors = ["Tom Bulled <26026015+tombulled@users.noreply.github.com>"]
 license = "MIT"
 readme = "README.md"
