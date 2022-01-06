@@ -3,13 +3,6 @@ import functools
 import math
 import enum
 
-
-class Sign(int, enum.Enum):
-    POSITIVE: int = 1
-    NEGATIVE: int = -1
-    NONE: int = 0
-
-
 # NOTE: This should inherit from `int` (instead of using .value)
 class Integer:
     def __init__(self, value: int, /, *, base: int = 10):
@@ -40,29 +33,23 @@ class Integer:
         return iter(separate(self.value, base=self.base))
 
 
-def sign(integer: int, /) -> Sign:
+def sign(integer: int, /) -> int:
     """
     Get the sign of `integer`
 
     E.g:
-        >>> sign(-1234)
-        <Sign.NEGATIVE: -1>
         >>> sign(1234)
-        <Sign.POSITIVE: 1>
+        1
+        >>> sign(-1234)
+        -1
         >>> sign(0)
-        <Sign.NONE: 0>
+        0
     """
 
-    if integer < 0:
-        return Sign.NEGATIVE
-    elif integer > 0:
-        return Sign.POSITIVE
+    if integer == 0:
+        return integer
 
-    return Sign.NONE
-
-
-def signify(integer: int, sign: Sign, /) -> int:
-    return sign * abs(integer)
+    return integer // abs(integer)
 
 
 def length(integer: int, /, *, base: int = 10) -> int:
@@ -155,11 +142,11 @@ def weight(integers: t.Iterable[int], /, *, base: int = 10) -> t.List[int]:
 
     E.g:
         >>> weight([1, 2, 3, 4])
-        [1000, 200, 30, 4]
+        [1, 20, 300, 4000]
     """
 
     return [
-        integer * base ** (len(integers) - index - 1)
+        integer * base ** index
         for index, integer in enumerate(integers)
     ]
 
@@ -174,26 +161,6 @@ def negative(n: int, /) -> int:
 
 def toggle(n: int, /) -> int:
     return -n
-
-
-def is_positive(n: int, /) -> bool:
-    return n > 0
-
-
-def is_negative(n: int, /) -> bool:
-    return n < 0
-
-
-def string(integer: int, /, *, base: int = 10) -> str:
-    """
-    Stringify an integer
-
-    E.g:
-        >>> string(0xff, base=16)
-        'ff'
-    """
-
-    raise NotImplementedError
 
 
 def get(integer: int, index: int, /, *, base: int = 10) -> int:
@@ -229,6 +196,61 @@ def convert(integer: int, base: int, /) -> int:
         True
         >>> convert(1234, 16) == 0x1234
         True
+    """
+
+    # TODO: Make this support `from_base` and `to_base`
+    # E.g:
+    #   >>> convert(0x1011, from_base=16, to_base=2)
+    #   0b1011
+
+    return sum(weight(reversed(separate(integer)), base=base))
+
+def string(integer: int, /, *, base: int = 10) -> str:
+    """
+    Stringify an integer
+
+    E.g:
+        >>> string(0xff, base=16)
+        'ff'
+    """
+
+    # NOTE: Use `base64` for defined bases (32, 64, ...) and `uuencode` for the rest?
+
+    raise NotImplementedError
+
+def unstring(string: str, /, *, base: int = 10) -> int:
+    """
+    Un-Stringify an integer
+
+    E.g:
+        >>> unstring('ff', base=16)
+        0xff
+    """
+
+    raise NotImplementedError
+
+def lshift(integer: int, amount: int, /, *, base: int = 10) -> int:
+    """
+    Left-shift an integer
+
+    E.g:
+        >>> lshift(1, 2)
+        100
+        >>> lshift(0xabc, 1, base=16)
+        0xabc0
+    """
+
+    raise NotImplementedError
+
+def rshift(integer: int, amount: int, /, *, base: int = 10) -> int:
+    """
+    Right-shift an integer
+
+    E.g:
+        >>> rshift(100, 1)
+        10
+        >>> rshift(0xabc0, 1, base=16)
+        0xabc
     """
 
     raise NotImplementedError
