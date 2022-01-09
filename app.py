@@ -2,13 +2,10 @@ import num
 
 '''
 TODO:
-    * Claim PyPI name (Need v1 first)
-
-What about class-based? (linteger, mint, )
-
-i = Integer(1234)
-
-len(i) == 4
-
-i[0] == 1
+    * Claim PyPI name (Can't use 'num' :/)
 '''
+
+i = num.Integer(123)
+
+# print(f'i = {i}')
+# print(f'len(i) = {len(i)}')

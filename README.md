@@ -35,6 +35,16 @@ Integer utility library
 
 ### Join All
 ```python
+>>> num.join(12, 34)
+1234
+>>> num.join(-12, -34) 
+-1234
+>>> num.join(0xde, 0xad, base=16)
+0xdead
+```
+
+### Join All
+```python
 >>> num.join_all([1, 2, 3, 4])
 1234
 >>> num.join_all([-1, -2, -3, -4]) 
@@ -59,6 +69,18 @@ Integer utility library
 1
 >>> num.get(-1234, -1)
 -4
+```
+
+### Convert
+Convert `integer` from base `from_base` to base `to_base`
+
+```python
+>>> num.convert(1011, to_base=2)
+0b1011
+>>> num.convert(0x789, from_base=16)
+789
+>>> num.convert(0x1011, from_base=16, to_base=2)
+0b1011
 ```
 
 ### Positive

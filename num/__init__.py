@@ -3,34 +3,20 @@ import functools
 import math
 import enum
 
-# NOTE: This should inherit from `int` (instead of using .value)
-class Integer:
-    def __init__(self, value: int, /, *, base: int = 10):
-        self.value = value
-        self.base = base
-        # NOTE: Implement .sign:Sign ? (for +ve & -ve nums)
-
+class Integer(int):
     def __getitem__(self, item: t.Union[int, slice]):
-        digits = separate(self.value, base=self.base)[item]
+        digits = separate(self)[item]
 
         if isinstance(item, slice):
-            return join(digits, base=self.base)
+            return join_all(digits)
 
         return digits
 
     def __len__(self) -> int:
-        return length(self.value, base=self.base)
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.value}, base={self.base})"
-
-    def __str__(self) -> str:
-        # TODO: (e.g. return hex string, use unicode for base-n support?, implement string(n, base))
-        # NOTE: What about negatives (e.g. '-1011' ?)
-        raise NotImplementedError
+        return length(self)
 
     def __iter__(self) -> t.Iterable:
-        return iter(separate(self.value, base=self.base))
+        return iter(separate(self))
 
 
 def sign(integer: int, /) -> int:
@@ -103,12 +89,12 @@ def join(a: int, b: int, /, *, base: int = 10) -> int:
         -1234
     """
 
-    if {sign(a), sign(b)} == {Sign.POSITIVE, Sign.NEGATIVE}:
+    signs: t.Set[int] = {sign(a), sign(b)}
+
+    if signs == {1, -1}:
         raise ValueError("a and b are of incompatible signs (+ve and -ve)")
 
-    multiplier: Sign = (
-        Sign.NEGATIVE if is_negative(a) or is_negative(b) else Sign.POSITIVE
-    )
+    multiplier: int = sign(sum(signs))
 
     return (abs(a) * base ** length(abs(b), base=base) + abs(b)) * multiplier
 
@@ -152,14 +138,44 @@ def weight(integers: t.Iterable[int], /, *, base: int = 10) -> t.List[int]:
 
 
 def positive(n: int, /) -> int:
+    """
+    Convert `n` to its positive form: |n|
+
+    E.g:
+        >>> positive(123)
+        123
+        >>> positive(-123)
+        123
+    """
+
     return abs(n)
 
 
 def negative(n: int, /) -> int:
+    """
+    Convert `n` to its negative form: -|n|
+
+    E.g:
+        >>> negative(123)
+        -123
+        >>> negative(-123)
+        -123
+    """
+
     return -abs(n)
 
 
 def toggle(n: int, /) -> int:
+    """
+    Toggle the sign of `n`
+
+    E.g:
+        >>> toggle(123)
+        -123
+        >>> toggle(-123)
+        123
+    """
+
     return -n
 
 
@@ -174,7 +190,7 @@ def get(integer: int, index: int, /, *, base: int = 10) -> int:
         4
     """
 
-    true_index = -index - 1
+    true_index: int = -index - 1
 
     if index >= 0:
         true_index += length(abs(integer), base=base)
@@ -185,72 +201,48 @@ def get(integer: int, index: int, /, *, base: int = 10) -> int:
     return ((abs(integer) // (base ** true_index)) % base) * sign(integer)
 
 
-def convert(integer: int, base: int, /) -> int:
+def convert(integer: int, /, *, from_base: int = 10, to_base: int = 10) -> int:
     """
-    Convert `integer` from base-10 to `base`
+    Convert `integer` from base `from_base` to base `to_base`
 
     E.g:
-        >>> convert(1011, 2) == 0b1011
-        True
-        >>> convert(257, 8) == 0o257
-        True
-        >>> convert(1234, 16) == 0x1234
-        True
+        >>> convert(1011, to_base=2)
+        0b1011
+        >>> convert(0x789, from_base=16)
+        789
+        >>> convert(0x1011, from_base=16, to_base=2)
+        0b1011
     """
 
-    # TODO: Make this support `from_base` and `to_base`
-    # E.g:
-    #   >>> convert(0x1011, from_base=16, to_base=2)
-    #   0b1011
+    digits: t.List[int] = separate(integer, base=from_base)
 
-    return sum(weight(reversed(separate(integer)), base=base))
+    digit: int
+    for digit in digits:
+        if digit > to_base - 1:
+            raise Exception(f'{digit} is an invalid base-{to_base} integer')
 
-def string(integer: int, /, *, base: int = 10) -> str:
+    return join_all(digits, base=to_base)
+
+def shift(integer: int, /, *, amount: int = 1, base: int = 10) -> int:
     """
-    Stringify an integer
+    Shift an integer
 
     E.g:
-        >>> string(0xff, base=16)
-        'ff'
-    """
-
-    # NOTE: Use `base64` for defined bases (32, 64, ...) and `uuencode` for the rest?
-
-    raise NotImplementedError
-
-def unstring(string: str, /, *, base: int = 10) -> int:
-    """
-    Un-Stringify an integer
-
-    E.g:
-        >>> unstring('ff', base=16)
-        0xff
-    """
-
-    raise NotImplementedError
-
-def lshift(integer: int, amount: int, /, *, base: int = 10) -> int:
-    """
-    Left-shift an integer
-
-    E.g:
-        >>> lshift(1, 2)
-        100
-        >>> lshift(0xabc, 1, base=16)
+        >>> shift(123, amount=2)
+        12300
+        >>> shift(-123, amount=-2)
+        -1
+        >>> shift(0xabc, base=16)
         0xabc0
-    """
-
-    raise NotImplementedError
-
-def rshift(integer: int, amount: int, /, *, base: int = 10) -> int:
-    """
-    Right-shift an integer
-
-    E.g:
-        >>> rshift(100, 1)
-        10
-        >>> rshift(0xabc0, 1, base=16)
+        >>> shift(123, amount=-1)
+        12
+        >>> shift(0xabc0, amount=-1, base=16)
         0xabc
     """
 
-    raise NotImplementedError
+    if amount > 0:
+        return join_all(separate(integer, base=base) + [0] * amount, base=base)
+    elif amount < 0:
+        return join_all(separate(integer, base=base)[:amount], base=base)
+
+    return amount
