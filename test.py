@@ -1,5 +1,7 @@
 import num
 
+integer = num.Integer(1234)
+
 assert num.positive(123) == 123
 assert num.positive(-123) == 123
 
@@ -58,12 +60,10 @@ assert num.shift(0xabc, base=16) == 0xabc0
 assert num.shift(100, amount=-1) == 10
 assert num.shift(0xabc0, amount=-1, base=16) == 0xabc
 
-i = num.Integer(1234)
-
-assert i[0] == 1
-assert i[::-1] == 4321
-assert i[:2] == 12
-assert len(i) == 4
-assert list(i) == [1, 2, 3, 4]
+assert integer[0] == 1
+assert integer[:2] == 12
+assert integer[::-1] == 4321
+assert len(integer) == 4
+assert list(integer) == [1, 2, 3, 4]
 
 print('All tests passed.')

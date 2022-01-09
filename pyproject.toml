@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/tombulled/num"
 repository = "https://github.com/tombulled/num"
-keywords = ["python", "num"]
+keywords = ["python", "num", "number", "int", "integer", "base"]
 
 [tool.poetry.dependencies]
 python = "^3.8"

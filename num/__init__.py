@@ -3,6 +3,7 @@ import functools
 import math
 import enum
 
+
 class Integer(int):
     def __getitem__(self, item: t.Union[int, slice]):
         digits = separate(self)[item]
@@ -124,59 +125,14 @@ def join_all(integers: t.Iterable[int], /, *, base: int = 10) -> int:
 
 def weight(integers: t.Iterable[int], /, *, base: int = 10) -> t.List[int]:
     """
-    Weight integers
+    Weight an iterable of integers
 
     E.g:
         >>> weight([1, 2, 3, 4])
         [1, 20, 300, 4000]
     """
 
-    return [
-        integer * base ** index
-        for index, integer in enumerate(integers)
-    ]
-
-
-def positive(n: int, /) -> int:
-    """
-    Convert `n` to its positive form: |n|
-
-    E.g:
-        >>> positive(123)
-        123
-        >>> positive(-123)
-        123
-    """
-
-    return abs(n)
-
-
-def negative(n: int, /) -> int:
-    """
-    Convert `n` to its negative form: -|n|
-
-    E.g:
-        >>> negative(123)
-        -123
-        >>> negative(-123)
-        -123
-    """
-
-    return -abs(n)
-
-
-def toggle(n: int, /) -> int:
-    """
-    Toggle the sign of `n`
-
-    E.g:
-        >>> toggle(123)
-        -123
-        >>> toggle(-123)
-        123
-    """
-
-    return -n
+    return [integer * base ** index for index, integer in enumerate(integers)]
 
 
 def get(integer: int, index: int, /, *, base: int = 10) -> int:
@@ -219,9 +175,10 @@ def convert(integer: int, /, *, from_base: int = 10, to_base: int = 10) -> int:
     digit: int
     for digit in digits:
         if digit > to_base - 1:
-            raise Exception(f'{digit} is an invalid base-{to_base} integer')
+            raise Exception(f"{digit} is an invalid base-{to_base} integer")
 
     return join_all(digits, base=to_base)
+
 
 def shift(integer: int, /, *, amount: int = 1, base: int = 10) -> int:
     """
@@ -246,3 +203,45 @@ def shift(integer: int, /, *, amount: int = 1, base: int = 10) -> int:
         return join_all(separate(integer, base=base)[:amount], base=base)
 
     return amount
+
+
+def positive(n: int, /) -> int:
+    """
+    Convert `n` to its positive form: |n|
+
+    E.g:
+        >>> positive(123)
+        123
+        >>> positive(-123)
+        123
+    """
+
+    return abs(n)
+
+
+def negative(n: int, /) -> int:
+    """
+    Convert `n` to its negative form: -|n|
+
+    E.g:
+        >>> negative(123)
+        -123
+        >>> negative(-123)
+        -123
+    """
+
+    return -abs(n)
+
+
+def toggle(n: int, /) -> int:
+    """
+    Toggle the sign of `n`
+
+    E.g:
+        >>> toggle(123)
+        -123
+        >>> toggle(-123)
+        123
+    """
+
+    return -n
